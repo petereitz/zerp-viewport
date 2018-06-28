@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta content="initial-scale=1, shrink-to-fit=no, width=device-width" name="viewport">
+
+    <!-- CSS -->
+    <!-- Add Material font (Roboto) and Material icon as needed -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i|Roboto+Mono:300,400,700|Roboto+Slab:300,400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Add Material CSS, replace Bootstrap CSS -->
+    <link href="css/material.min.css" rel="stylesheet">
+    <title>View</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="col-md-auto">
+        <ul class="list-group" id="view"></ul>
+      </div>
+    </div>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="js/material.min.js"></script>
+    <script src="http://localhost:8000/socket.io/socket.io.js"></script>
+
+    <!-- Add listeners for message types-->
+    <script>
+      // Connect to the socket
+      var socket = io('http://localhost:8000', { path: '/socket.io' });
+
+
+
+      // add a new message listener
+      function addMessageType(type, ttl) {
+        // let's work in millis
+        ttl = ttl * 1000;
+
+        // listen
+        socket.on(type, function(msg){
+          // t
+          console.log(msg);
+
+          // were we passed a ttl w/ the message?
+          if (msg.hasOwnProperty('ttl')) {
+            ttl = msg.ttl * 1000;
+          }
+
+          // format the expiration
+          let ts = Date.now();
+          let expiration = (ts + ttl);
+
+          // add the item
+          $('#view').prepend(`
+            <li class="list-group-item viewMessage" data-exp=${expiration}>
+              <b>${msg.type}:&nbsp</b>&nbsp${msg.message}
+            </li>
+          `);
+        });
+      }
+
+      // CALL YOUR MESSAGE TYPE LISTENERS HERE
+      addMessageType('test', 10);
+      addMessageType('alert', 30);
+
+      // cleanup stale messages
+      setInterval(function(){
+        $(".viewMessage").each(function(){
+          // set
+          let ts = Date.now();
+          let exp = this.getAttribute("data-exp");
+
+          // pull expired
+          if (ts >= exp) {
+            $(this).remove();
+          }
+        });
+      }, 500);
+    </script>
+  </body>
+</html>
